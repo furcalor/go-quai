@@ -1096,7 +1096,7 @@ func (sl *Slice) GetPendingHeader(powId types.PowID, coinbase common.Address) (*
 	} else {
 		// Only serve after the fork block
 		if phCopy != nil && phCopy.PrimeTerminusNumber().Uint64() < params.KawPowForkBlock {
-			return nil, errors.New("pending header for non progpow requested before kawpow fork")
+			return nil, fmt.Errorf("non-progpow pending header rejected: primeTerminus=%d < forkBlock=%d", phCopy.PrimeTerminusNumber().Uint64(), params.KawPowForkBlock)
 		}
 		auxTemplate := sl.miner.worker.GetBestAuxTemplate(powId)
 		// If we have a KAWPOW template, we need to create a proper Ravencoin header

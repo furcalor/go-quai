@@ -346,6 +346,28 @@ func TestCopyWorkObject(t *testing.T) {
 	require.Equal(t, originalWo.Hash(), expectedHash, "Copied WorkObject changed values from the original")
 }
 
+// TestCopyWorkObjectHeaderDeepCopy verifies that *big.Int fields are deeply copied
+// to prevent shared memory issues when modifying the copy.
+func TestCopyWorkObjectHeaderDeepCopy(t *testing.T) {
+	originalWo, _ := woTestData()
+	originalPrimeTerminus := originalWo.PrimeTerminusNumber().Uint64()
+
+	newWo := CopyWorkObject(originalWo)
+
+	// Verify the initial values match
+	require.Equal(t, originalPrimeTerminus, newWo.PrimeTerminusNumber().Uint64(),
+		"Copied primeTerminusNumber should match original")
+
+	// Modify the copy's primeTerminusNumber
+	newWo.WorkObjectHeader().SetPrimeTerminusNumber(big.NewInt(999999))
+
+	// Verify the original is unchanged
+	require.Equal(t, originalPrimeTerminus, originalWo.PrimeTerminusNumber().Uint64(),
+		"Original primeTerminusNumber should not change when copy is modified")
+	require.NotEqual(t, originalWo.PrimeTerminusNumber().Uint64(), newWo.PrimeTerminusNumber().Uint64(),
+		"Copy and original should have different primeTerminusNumber values after modification")
+}
+
 func TestNewWorkObject(t *testing.T) {
 	// Verify that copy is same as original.
 	originalWo, expectedHash := woTestData()

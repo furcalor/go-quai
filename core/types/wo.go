@@ -1355,7 +1355,9 @@ func CopyWorkObjectHeader(wh *WorkObjectHeader) *WorkObjectHeader {
 	cpy.SetMixHash(wh.MixHash())
 	cpy.SetLocation(wh.Location())
 	cpy.SetTime(wh.Time())
-	cpy.SetPrimeTerminusNumber(wh.primeTerminusNumber)
+	if wh.primeTerminusNumber != nil {
+		cpy.SetPrimeTerminusNumber(new(big.Int).Set(wh.primeTerminusNumber))
+	}
 	cpy.SetLock(wh.Lock())
 	cpy.SetPrimaryCoinbase(wh.PrimaryCoinbase())
 	cpy.SetData(wh.Data())
@@ -1368,13 +1370,13 @@ func CopyWorkObjectHeader(wh *WorkObjectHeader) *WorkObjectHeader {
 	}
 
 	if wh.ShaShareTarget() != nil {
-		cpy.SetShaShareTarget(wh.ShaShareTarget())
+		cpy.SetShaShareTarget(new(big.Int).Set(wh.ShaShareTarget()))
 	}
 	if wh.ScryptShareTarget() != nil {
-		cpy.SetScryptShareTarget(wh.ScryptShareTarget())
+		cpy.SetScryptShareTarget(new(big.Int).Set(wh.ScryptShareTarget()))
 	}
 	if wh.KawpowDifficulty() != nil {
-		cpy.SetKawpowDifficulty(wh.KawpowDifficulty())
+		cpy.SetKawpowDifficulty(new(big.Int).Set(wh.KawpowDifficulty()))
 	}
 
 	// Deep copy AuxPow if present

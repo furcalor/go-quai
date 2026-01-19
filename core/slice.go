@@ -1081,6 +1081,33 @@ func (sl *Slice) pcrc(batch ethdb.Batch, header *types.WorkObject, domTerminus c
 // GetPendingHeader is used by the miner to request the current pending header
 func (sl *Slice) GetPendingHeader(powId types.PowID, coinbase common.Address) (*types.WorkObject, error) {
 	phCopy := types.CopyWorkObject(sl.ReadBestPh())
+	currentHeader := sl.hc.CurrentHeader()
+
+	// If the pending header is stale (parent hash doesn't match current head),
+	// regenerate it based on the current chain head
+	if currentHeader != nil && (phCopy == nil || phCopy.ParentHash(sl.NodeCtx()) != currentHeader.Hash()) {
+		if phCopy != nil {
+			sl.logger.WithFields(log.Fields{
+				"phParentHash":      phCopy.ParentHash(sl.NodeCtx()),
+				"currentHeaderHash": currentHeader.Hash(),
+			}).Debug("Pending header is stale, regenerating from current head")
+		} else {
+			sl.logger.WithField("currentHeaderHash", currentHeader.Hash()).Debug("No pending header, generating from current head")
+		}
+
+		// Regenerate the pending header from the current chain head
+		newPh, err := sl.GeneratePendingHeader(currentHeader, false)
+		if err != nil {
+			sl.logger.WithField("err", err).Warn("Failed to regenerate pending header from current head")
+			if phCopy == nil {
+				return nil, errors.New("no pending header available")
+			}
+			// Fall back to the stale pending header if regeneration fails
+		} else {
+			phCopy = types.CopyWorkObject(newPh)
+		}
+	}
+
 	if phCopy == nil {
 		return nil, errors.New("no pending header available")
 	}
